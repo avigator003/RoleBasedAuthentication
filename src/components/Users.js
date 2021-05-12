@@ -63,9 +63,17 @@ axios.get('http://localhost:8080/api/getusers')
 },[blocking])
 
 
+
+// Create User
+const handleCreateUser=()=>{
+    history.push('/user/create')
+}
+
 // Edit User
 const handleEditUser=(id)=>{
- 
+  history.push({
+    pathname: `/user/update/${id}`,
+});
 }
 
 
@@ -115,7 +123,7 @@ const handleUnBlockUser=(id)=>{
                 "Create User":(item)=>(
                   <td>
                   <CButton variant="outline" color="primary" 
-                  size="sm" block onClick={()=>handleEditUser(item._id)}>Create</CButton>
+                  size="sm" block onClick={()=>handleCreateUser()}>Create</CButton>
                 </td>
                 ),
            
@@ -123,7 +131,7 @@ const handleUnBlockUser=(id)=>{
                   <td>
                     {item.blocked?
                        <CButton variant="outline" color="success" 
-                       size="sm" block onClick={()=>handleUnBlockUser(item._id)}>Unblock</CButton>:
+                       size="sm" block onClick={()=>handleUnBlockUser(item.id)}>Unblock</CButton>:
                     
                   <CButton variant="outline" color="danger" 
                   size="sm" block onClick={()=>handleBlockUser(item._id)}>Block</CButton>
@@ -134,7 +142,7 @@ const handleUnBlockUser=(id)=>{
                 "Edit Details":(item)=>(
                   <td>
                   <CButton variant="outline" color="warning" 
-                  size="sm" block onClick={()=>handleEditUser(item._id)}>Edit</CButton>
+                  size="sm" block onClick={()=>handleEditUser(item.userId)}>Edit</CButton>
                 </td>
                 ),
                
