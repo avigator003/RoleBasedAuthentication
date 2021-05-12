@@ -9,26 +9,18 @@ import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import in.avigator.Model.SystemUser;
 import in.avigator.Repository.UserRepository;
-import in.avigator.principal.SystemUserDetails;
-
 
 @Service
-public class SystemUserService implements UserDetailsService
+public class SystemUserService
 {
 
 	@Autowired
 	UserRepository userRepo;
 
-	@Autowired
-	private PasswordEncoder encoder;
 	
 	@Autowired
 	private EntityManagerFactory entityManagerFactory;
@@ -39,15 +31,19 @@ public class SystemUserService implements UserDetailsService
 		return ss;
 	}
 	
-	@Override
-	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-    	SystemUser user = userRepo.findByUserName(username);
-		if (user == null) {
-			throw new UsernameNotFoundException("Could not find user");
-		} else {
-			return new SystemUserDetails(user);
-	}
-	}
+
+     public SystemUser login(String username,String password)
+	   {		
+		Session ss=giveSession();
+		Query query=ss.createQuery("from SystemUser where userName=:username and password=:password");
+		query.setString("username", username);
+		query.setString("password", password);
+		SystemUser user=(SystemUser)query.uniqueResult();
+		ss.close();
+		return user;
+	   }
+	
+	
 	
 	
 	public boolean save(SystemUser user) 
@@ -65,6 +61,13 @@ public class SystemUserService implements UserDetailsService
 			   userRepo.save(ob);
 		       return true;
 	}
+            
+
+            public boolean delete(String userId)
+     {		
+			   userRepo.deleteById(userId);
+		       return true;
+	}
 
 	
      public List<SystemUser> getUsers()
@@ -79,16 +82,16 @@ public class SystemUserService implements UserDetailsService
 	
 	public void changeStatus(String userId, boolean status) 
 	{
-
-		SystemUser user = userRepo.getOne(userId);
+     	SystemUser user = userRepo.getOne(userId);
+    	System.out.println("status"+status);
+    	
 		user.setIsActive(status);
+		System.out.println("status"+user);
+		
 		userRepo.save(user);
 	}
 
-	
 
-     
-    
      
 	public SystemUser getUserById(String userid)
 	{

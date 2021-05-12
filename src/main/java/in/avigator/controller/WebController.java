@@ -2,12 +2,15 @@ package in.avigator.controller;
 
 import java.util.List;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import in.avigator.Model.SystemUser;
@@ -22,15 +25,12 @@ public class WebController {
     SystemUserService userService;
 	
 	@RequestMapping("/login")
-	public void login() {
-		
-         
+	public SystemUser login(@RequestBody SystemUser user) {
+		 return userService.login(user.getUserName(), user.getPassword());
 	}
 	
 	@RequestMapping("/getusers")
 	public List<SystemUser> getUsers() {
-		  System.out.println("getting");
-			 
 		  return userService.getUsers();
     }
 	
@@ -49,5 +49,19 @@ public class WebController {
 		  SystemUser user=userService.getUserById(userId);
 		  return user;
    }
+	
+	@PostMapping("/changestatus/{id}")
+	public void changeStatus(@PathVariable("id") String userId,@RequestBody String status) throws JSONException {
+	  JSONObject jsonObject= new JSONObject(status);
+	 userService.changeStatus(userId, jsonObject.getBoolean("status"));	  
+	}
+	
+	@RequestMapping("/delete/{id}")
+	public boolean deleteUser(@PathVariable("id") String userId) {
+		   return userService.delete(userId);
+		 }
+	
+	
+	
 }
 
