@@ -41,15 +41,12 @@ public class SystemUserService implements UserDetailsService
 	
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-
-		SystemUser user = userRepo.findByUserName(username);
-		
+    	SystemUser user = userRepo.findByUserName(username);
 		if (user == null) {
 			throw new UsernameNotFoundException("Could not find user");
 		} else {
 			return new SystemUserDetails(user);
-
-		}
+	}
 	}
 	
 	
@@ -60,12 +57,13 @@ public class SystemUserService implements UserDetailsService
 		 return true;
 	}
 	
-	public boolean update(SystemUser user,String filename)
-    {		
-		SystemUser ob = userRepo.getOne(user.getUserId());
-	           ob.update(user);
+            public boolean update(SystemUser user,String userId)
+     {		
+		       SystemUser ob = userRepo.findById(userId).get();
+		       ob.update(user);
+		       ob.setMobile(user.getMobile());
 			   userRepo.save(ob);
-		        return true;
+		       return true;
 	}
 
 	
@@ -76,7 +74,7 @@ public class SystemUserService implements UserDetailsService
 		List<SystemUser> userList=query.list();
 		ss.close();
 		return userList;
-	}
+	   }
 	
 	
 	public void changeStatus(String userId, boolean status) 
@@ -88,23 +86,12 @@ public class SystemUserService implements UserDetailsService
 	}
 
 	
-     public SystemUser get(String userId) {
-		return userRepo.getOne(userId);
-	}
 
      
-     public String getId(String userName)
-     {
-         Session ss=giveSession();
-    	 Query query = ss.createQuery("from SystemUser where userName=:userName");
-  		 query.setParameter("userName", userName) ;
-  		 SystemUser user=  (SystemUser)query.uniqueResult();
-  		 ss.close();
-    	return user.getUserId();
-     }
+    
      
-	public String getUserName(String userid)
+	public SystemUser getUserById(String userid)
 	{
-		return userRepo.getOne(userid).getUserName();		
+		return userRepo.findById(userid).get();	
 	}
 }
