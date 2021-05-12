@@ -41,7 +41,7 @@ import axios from 'axios';
 
 const UserForm = (props) => {
     const history = useHistory()
-
+     
 
     const [state, setState] = useState({
         userName: "",
@@ -61,7 +61,22 @@ const UserForm = (props) => {
         else
             setEditing(false)
 
+
+        getCurrentUser()  
+
+
     }, [])
+
+
+    const getCurrentUser=()=>{
+        axios.get(`http://localhost:8080/api/getuserbyid/`+id)
+        .then(response=>{
+            console.log("us",response)
+            setState(response.data)
+        })
+        .catch(error=>console.log(error))
+      
+    }
 
 
     const handleChange = (e) => {
@@ -74,14 +89,37 @@ const UserForm = (props) => {
 
     const handleUpdate = (e) => {
         e.preventDefault();
+        axios.post(`http://localhost:8080/api/update/`+id,state)
+        .then(response=>{
+            if(response.data)
+            {
+              alert("Successfully Updated")
+              getCurrentUser()
+              history.push("/users")
+            }
+
+        })
+        .catch(error=>console.log(error))
+      
     };
     
     const handleCreate = (e) => {
-        console.log("creating",state)
         e.preventDefault();
         axios.post("http://localhost:8080/api/create",state)
-        .then(response=>console.log(response))
-        .catch(error=>console.log(error))
+        .then(response=>{
+            if(response.data)
+            {
+              alert("Successfully Saved")
+              setState({
+                userName: "",
+                password: "",
+                mobile: "",
+                roles: 'ROLE_USER'
+              })
+            }
+
+        })
+        .catch(error=>alert('Unsuccessfull'))
     };
 
 
@@ -105,8 +143,7 @@ const UserForm = (props) => {
                                     </CCol>
                                 </CFormGroup>
 
-
-
+                        
 
                                 <CFormGroup row>
                                     <CCol md="3">

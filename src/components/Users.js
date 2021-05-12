@@ -33,9 +33,10 @@ const Users = () => {
   const queryPage = useLocation().search.match(/page=([0-9]+)/, '')
   const currentPage = Number(queryPage && queryPage[1] ? queryPage[1] : 1)
   const [page, setPage] = useState(currentPage)
-  const [usersData,setUsersData]=useState()
-  const[blocking,setBlocking]=useState(true)
-  const[field,setField]=useState([])
+  const [usersData, setUsersData] = useState()
+  const [blocking, setBlocking] = useState(true)
+  const [field, setField] = useState([])
+  const [loading, setLoading] = useState(true)
 
   const pageChange = newPage => {
     currentPage !== newPage && history.push(`/users?page=${newPage}`)
@@ -46,120 +47,139 @@ const Users = () => {
   }, [currentPage, page])
 
 
-//get Users List
-useEffect(()=>{
-//if(user.role=="admin")
-//setField(['name','username','mobile','status','actions'])
-//else
-//setField(['name','username','mobile','status'])
+  //get Users List
+  useEffect(() => {
 
-console.log("hey")
-axios.get('http://localhost:8080/api/getusers')
-.then(res => {
-  setUsersData(res.data)
-  setField(['userName','mobile','status','Create User','Block User','Edit Details',])
-})
+    const user = JSON.parse(localStorage.getItem("user"))
+    if (user?.roles == "ROLE_ADMIN")
+      setField(['userName', 'mobile', 'status', 'Delete User', 'Edit Details',])
+    else
+      setField(['userName', 'mobile', 'status'])
 
-},[blocking])
+    axios.get('http://localhost:8080/api/getusers')
+      .then(res => {
+        setUsersData(res.data)
+        setLoading(false)
+
+      })
+
+  }, [blocking])
 
 
 
-// Create User
-const handleCreateUser=()=>{
+  // Create User
+  const handleCreateUser = () => {
     history.push('/user/create')
-}
+  }
 
-// Edit User
-const handleEditUser=(id)=>{
-  history.push({
-    pathname: `/user/update/${id}`,
-});
-}
+  // Edit User
+  const handleEditUser = (id) => {
+    history.push({
+      pathname: `/user/update/${id}`,
+    });
+  }
 
 
-//Block User
-const handleBlockUser=(id)=>{
- }
+  //Block User
+  const handleDeleteUser = (id) => {
+    axios.post(`http://localhost:8080/api/delete/` + id)
+      .then(response => {
+        setBlocking(!blocking)
+      })
+      .catch(error => console.log(error))
+  }
 
-//Unblock User
-const handleUnBlockUser=(id)=>{
+  const handleLogout = () => {
+    localStorage.setItem("user", null)
 
-}
+    history.push('/login')
+  }
 
 
   return (
-    <CRow>
-      <CCol xl={12}>
-        <CCard>
-          <CCardHeader size={50}>
-            Users List
-          </CCardHeader>
-          <CCardBody>
-          <CDataTable
-           tableFilter
-            items={usersData}
-            fields={field}
-            hover
-            striped
-            itemsPerPage={10}
-            activePage={page}
-            clickableRows
-         //   onRowClick={(item) => history.push(`/users/${item.id}`)}
-            scopedSlots = {{
-              'status':
-                (item)=>(
-                  <td>
-                    {
-                      item.blocked?
-                    <CBadge color={getBadge("Blocked")}>
-                      Blocked
-                    </CBadge>:
-                     <CBadge color={getBadge("Active")}>
-                     Active
+    <>
+      {!loading &&
+        <CRow>
+          <CCol xl={12}>
+            <CCard>
+              <CCardHeader size={50} style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+                <p>Users List</p>
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-evenly" }}>            
+                
+                <CButton variant="outline" color="primary"
+                    size="sm" block onClick={() => handleCreateUser()}>Create User</CButton>
+
+                  <CButton variant="outline" color="danger"
+                  size="sm" block onClick={() => handleLogout()}>Logout</CButton>
+                </div>
+
+
+              </CCardHeader>
+              <CCardBody>
+                <CDataTable
+                  tableFilter
+                  items={usersData}
+                  fields={field}
+                  hover
+                  striped
+                  itemsPerPage={10}
+                  activePage={page}
+                  clickableRows
+                  //   onRowClick={(item) => history.push(`/users/${item.id}`)}
+                  scopedSlots={{
+                    'status':
+                      (item) => (
+                        <td>
+                          {
+                            !item.isActive ?
+                              <CBadge color={getBadge("Blocked")}>
+                                Blocked
+                            </CBadge> :
+                              <CBadge color={getBadge("Active")}>
+                                Active
                    </CBadge>
-            }
-                  </td>
-                ),
-                "Create User":(item)=>(
-                  <td>
-                  <CButton variant="outline" color="primary" 
-                  size="sm" block onClick={()=>handleCreateUser()}>Create</CButton>
-                </td>
-                ),
-           
-                "Block User":(item)=>(
-                  <td>
-                    {item.blocked?
-                       <CButton variant="outline" color="success" 
-                       size="sm" block onClick={()=>handleUnBlockUser(item.id)}>Unblock</CButton>:
-                    
-                  <CButton variant="outline" color="danger" 
-                  size="sm" block onClick={()=>handleBlockUser(item._id)}>Block</CButton>
-                    }
-                </td>
-                ),
-             
-                "Edit Details":(item)=>(
-                  <td>
-                  <CButton variant="outline" color="warning" 
-                  size="sm" block onClick={()=>handleEditUser(item.userId)}>Edit</CButton>
-                </td>
-                ),
-               
-             }}
-          />
-          <CPagination
-            limit={5}
-            activePage={page}
-            onActivePageChange={pageChange}
-            pages={40}
-            doubleArrows={false} 
-            align="center"
-          />
-          </CCardBody>
-        </CCard>
-      </CCol>
-    </CRow>
+                          }
+                        </td>
+                      ),
+                    "Create User": (item) => (
+                      <td>
+                        <CButton variant="outline" color="primary"
+                          size="sm" block onClick={() => handleCreateUser()}>Create</CButton>
+                      </td>
+                    ),
+
+                    "Delete User": (item) => (
+                      <td>
+                        <CButton variant="outline" color="success"
+                          size="sm" block onClick={() => handleDeleteUser(item.userId)}>Delete</CButton> :
+
+
+                      </td>
+                    ),
+
+                    "Edit Details": (item) => (
+                      <td>
+                        <CButton variant="outline" color="warning"
+                          size="sm" block onClick={() => handleEditUser(item.userId)}>Edit</CButton>
+                      </td>
+                    ),
+
+                  }}
+                />
+                <CPagination
+                  limit={5}
+                  activePage={page}
+                  onActivePageChange={pageChange}
+                  pages={40}
+                  doubleArrows={false}
+                  align="center"
+                />
+              </CCardBody>
+            </CCard>
+          </CCol>
+        </CRow>
+      }
+    </>
   )
 }
 
